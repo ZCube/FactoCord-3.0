@@ -3,6 +3,7 @@ package support
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/titanous/json5"
 )
@@ -71,6 +72,72 @@ func (conf *configT) MustLoad() {
 	err = json5.Unmarshal(contents, &conf)
 	if err != nil {
 		Critical(err, "... when parsing config.json")
+	}
+
+	if len(conf.Executable) == 0 {
+		step := -1
+		args := []string{}
+		for _, arg := range os.Args {
+			if arg == "--" {
+				step = 0
+			}
+			if step == 1 {
+				conf.Executable = arg
+			} else if step > 1 {
+				args = append(args, arg)
+			}
+			if step >= 0 {
+				step++
+			}
+		}
+		if step > 1 {
+			conf.LaunchParameters = args
+		}
+	}
+	if len(conf.DiscordToken) == 0 {
+		conf.DiscordToken = os.Getenv("DISCORD_TOKEN")
+	}
+	if len(conf.FactorioChannelID) == 0 {
+		conf.FactorioChannelID = os.Getenv("FACTORIO_CHANNEL_ID")
+	}
+	if len(conf.Username) == 0 {
+		conf.Username = os.Getenv("USERNAME")
+	}
+	if len(conf.ModPortalToken) == 0 {
+		conf.ModPortalToken = os.Getenv("TOKEN")
+	}
+
+	if len(conf.DiscordToken) == 0 {
+		if data, err := os.ReadFile("/discord/token"); err == nil {
+			str := strings.TrimSpace(string(data))
+			if len(str) > 0 {
+				conf.DiscordToken = str
+			}
+		}
+	}
+	if len(conf.FactorioChannelID) == 0 {
+		if data, err := os.ReadFile("/discord/factorio_channel_id"); err == nil {
+			str := strings.TrimSpace(string(data))
+			if len(str) > 0 {
+				conf.FactorioChannelID = str
+			}
+		}
+	}
+	if len(conf.Username) == 0 {
+		if data, err := os.ReadFile("/account/username"); err == nil {
+			str := strings.TrimSpace(string(data))
+			if len(str) > 0 {
+				conf.Username = str
+			}
+		}
+	}
+	if len(conf.ModPortalToken) == 0 {
+		if data, err := os.ReadFile("/account/token"); err == nil {
+			str := strings.TrimSpace(string(data))
+			if len(str) > 0 {
+				conf.ModPortalToken = str
+			}
+		}
 	}
 }
 
