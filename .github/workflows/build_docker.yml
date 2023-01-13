@@ -31,17 +31,26 @@ jobs:
         id: repository
       - name: Extract branch name
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
         id: extract_branch
+      - name: GET Factorio image version
+        shell: bash
+        run: echo "FACTORIO_VERSION=$(wget -q 'https://registry.hub.docker.com/v2/repositories/factoriotools/factorio/tags?page_size=30' -O -  | jq  -r '.results[].name' | grep -E "([0-9]|\.)+" | sort | tail -n 1)" >> $GITHUB_OUTPUT
+        id: factorio_version
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ steps.repository.outputs.lowercase }}
+          images: |
+            ${{ env.REGISTRY }}/${{ steps.repository.outputs.lowercase }}
+          tags: |
+            type=raw,value={{branch}}-${{ steps.factorio_version.outputs.FACTORIO_VERSION }}
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: .
+          build-args: |
+            FACTORIO_VERSION=${{ steps.factorio_version.outputs.FACTORIO_VERSION }}"
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
