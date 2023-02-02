@@ -63,6 +63,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value={{branch}}-${{ steps.factorio_version.outputs.FACTORIO_LATEST_VERSION }}
             type=raw,value={{branch}}-latest
+            type=raw,value={{branch}}
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
