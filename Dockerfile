@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1.4
+ARG FACTORIO_VERSION=latest
 FROM golang:1.19-bullseye AS builder
 
 WORKDIR /app
@@ -13,7 +14,6 @@ RUN export version=$(git describe --tags $(git rev-parse --short HEAD)) \
  && echo "Version: $version" \
  && CGO_ENABLED=0 go build -ldflags "-X 'github.com/maxsupermanhd/FactoCord-3.0/support.FactoCordVersion=$version'" -o factorio-cord .
 
-ARG FACTORIO_VERSION=latest
 FROM factoriotools/factorio:${FACTORIO_VERSION}
 
 COPY --from=builder /app/factorio-cord /factorio-cord
