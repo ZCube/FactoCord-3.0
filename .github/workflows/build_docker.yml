@@ -1,6 +1,8 @@
 name: Build Docker
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 
 env:
   REGISTRY: ghcr.io
@@ -35,24 +37,53 @@ jobs:
         id: extract_branch
       - name: GET Factorio image version
         shell: bash
-        run: echo "FACTORIO_VERSION=$(wget -q 'https://registry.hub.docker.com/v2/repositories/factoriotools/factorio/tags?page_size=30' -O -  | jq  -r '.results[].name' | grep -E "([0-9]|\.)+" | sort | tail -n 1)" >> $GITHUB_OUTPUT
+        run: |
+          echo "FACTORIO_STABLE_VERSION=$(wget -q 'https://raw.githubusercontent.com/factoriotools/factorio-docker/master/buildinfo.json' -O - | jq -r '(.[] |= ({tags})) [][] | select(.[] | contains("stable")) | .[0]')" >> $GITHUB_OUTPUT
+          echo "FACTORIO_LATEST_VERSION=$(wget -q 'https://raw.githubusercontent.com/factoriotools/factorio-docker/master/buildinfo.json' -O - | jq -r '(.[] |= ({tags})) [][] | select(.[] | contains("latest")) | .[0]')" >> $GITHUB_OUTPUT
         id: factorio_version
-      - name: Docker meta
-        id: meta
+      - name: Docker stable meta
+        id: meta_stable
         uses: docker/metadata-action@v4
         with:
           images: |
             ${{ env.REGISTRY }}/${{ steps.repository.outputs.lowercase }}
           tags: |
-            type=raw,value={{branch}}-${{ steps.factorio_version.outputs.FACTORIO_VERSION }}
+            type=raw,value=${{ steps.factorio_version.outputs.FACTORIO_STABLE_VERSION }},enable={{is_default_branch}}
+            type=raw,value=stable,enable={{is_default_branch}}
+            type=raw,value={{branch}}-${{ steps.factorio_version.outputs.FACTORIO_STABLE_VERSION }}
+            type=raw,value={{branch}}-stable
+      - name: Docker latest meta
+        id: meta_latest
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ steps.repository.outputs.lowercase }}
+          tags: |
+            type=raw,value=${{ steps.factorio_version.outputs.FACTORIO_LATEST_VERSION }},enable={{is_default_branch}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value={{branch}}-${{ steps.factorio_version.outputs.FACTORIO_LATEST_VERSION }}
+            type=raw,value={{branch}}-latest
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: .
           build-args: |
-            FACTORIO_VERSION=${{ steps.factorio_version.outputs.FACTORIO_VERSION }}"
+            "FACTORIO_VERSION=${{ steps.factorio_version.outputs.FACTORIO_STABLE_VERSION }}"
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta_stable.outputs.tags }}
+          labels: ${{ steps.meta_stable.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.repository.outputs.lowercase }}:stable
+          cache-to: type=inline
           platforms: linux/amd64
-          # platforms: linux/amd64,linux/arm64/v8
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          build-args: |
+            "FACTORIO_VERSION=${{ steps.factorio_version.outputs.FACTORIO_LATEST_VERSION }}"
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta_latest.outputs.tags }}
+          labels: ${{ steps.meta_latest.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.repository.outputs.lowercase }}:latest
+          cache-to: type=inline
+          platforms: linux/amd64
