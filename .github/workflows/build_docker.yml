@@ -39,8 +39,8 @@ jobs:
       - name: GET Factorio image version
         shell: bash
         run: |
-          echo "FACTORIO_STABLE_VERSION=$(wget -q 'https://raw.githubusercontent.com/factoriotools/factorio-docker/master/buildinfo.json' -O - | jq -r '(.[] |= ({tags})) [][] | select(.[] | contains("stable")) | .[-1]')" >> $GITHUB_OUTPUT
-          echo "FACTORIO_LATEST_VERSION=$(wget -q 'https://raw.githubusercontent.com/factoriotools/factorio-docker/master/buildinfo.json' -O - | jq -r '(.[] |= ({tags})) [][] | select(.[] | contains("latest")) | .[-1]')" >> $GITHUB_OUTPUT
+          echo "FACTORIO_STABLE_VERSION=$(wget -q 'https://raw.githubusercontent.com/factoriotools/factorio-docker/master/buildinfo.json' -O - | jq -r '(.[] |= ({tags})) [][] | select(.[] | contains("stable")) | sort_by(.) | .[-2]')" >> $GITHUB_OUTPUT
+          echo "FACTORIO_LATEST_VERSION=$(wget -q 'https://raw.githubusercontent.com/factoriotools/factorio-docker/master/buildinfo.json' -O - | jq -r '(.[] |= ({tags})) [][] | select(.[] | contains("latest")) | sort_by(.) | .[-2]')" >> $GITHUB_OUTPUT
         id: factorio_version
       - name: Docker stable meta
         id: meta_stable
