@@ -22,6 +22,7 @@ COPY config-docker.json /config.json
 
 RUN cat /docker-entrypoint.sh | grep -v -E "^exec" > /docker-entrypoint-discord.sh \
     && echo 'if [[ ! -f "/factorio/config.json" ]]; then cp /config.json /factorio/config.json; fi' >> /docker-entrypoint-discord.sh \
+    && echo 'set +x' >> /docker-entrypoint-discord.sh \
     && echo 'cd factorio' >> /docker-entrypoint-discord.sh \
     && echo 'DISCORD_TOKEN=${DISCORD_TOKEN:-""}' >> /docker-entrypoint-discord.sh \
     && echo 'FACTORIO_CHANNEL_ID=${FACTORIO_CHANNEL_ID:-""}' >> /docker-entrypoint-discord.sh \
