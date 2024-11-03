@@ -108,7 +108,10 @@ func (conf *configT) MustLoad() {
 
 	if len(conf.Executable) == 0 {
 		if dashIndex != -1 {
-			conf.LaunchParameters = args[dashIndex+1:]
+			conf.Executable = args[dashIndex+1]
+			if dashIndex+2 < len(args) {
+				conf.LaunchParameters = args[dashIndex+2:]
+			}
 			// args = args[:dashIndex]
 		}
 	}
