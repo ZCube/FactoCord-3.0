@@ -33,8 +33,8 @@ RUN cat /docker-entrypoint.sh | grep -v -E "^exec" > /docker-entrypoint-discord.
     && echo 'USERNAME_FILE=${USERNAME_FILE:-"/account/username"}' >> /docker-entrypoint-discord.sh \
     && echo 'TOKEN_FILE=${TOKEN_FILE:-"/account/token"}' >> /docker-entrypoint-discord.sh \
     && echo 'exec $EXEC /factorio-cord \' >> /docker-entrypoint-discord.sh \
-    && echo '    --discord-token=${DISCORD_TOKEN} --factorio-channel-id=${FACTORIO_CHANNEL_ID} --username=${USERNAME} --mod-portal-token=${TOKEN} \' >> /docker-entrypoint-discord.sh \
-    && echo '    --discord-token-file=${DISCORD_TOKEN_FILE} --factorio-channel-id-file=${FACTORIO_CHANNEL_ID_FILE} --username-file=${USERNAME_FILE} --mod-portal-token-file=${TOKEN_FILE} \' >> /docker-entrypoint-discord.sh \
+    && echo '    "--discord-token=${DISCORD_TOKEN}" "--factorio-channel-id=${FACTORIO_CHANNEL_ID}" "--username=${USERNAME}" "--mod-portal-token=${TOKEN}" \' >> /docker-entrypoint-discord.sh \
+    && echo '    "--discord-token-file=${DISCORD_TOKEN_FILE}" "--factorio-channel-id-file=${FACTORIO_CHANNEL_ID_FILE}" "--username-file=${USERNAME_FILE}" "--mod-portal-token-file=${TOKEN_FILE}" \' >> /docker-entrypoint-discord.sh \
     && echo '    -- /opt/factorio/bin/x64/factorio "${FLAGS[@]}" "$@"' >> /docker-entrypoint-discord.sh \
     && chmod +x /docker-entrypoint-discord.sh
 
