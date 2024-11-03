@@ -178,6 +178,9 @@ func (conf *configT) MustLoad() {
 		conf.ModPortalToken = os.Getenv("TOKEN")
 	}
 
+	log.Print("Executable: " + conf.Executable)
+	log.Print("LaunchParameters: " + fmt.Sprintf("%v", conf.LaunchParameters))
+
 	log.Print("FactorioChannelID: " + conf.FactorioChannelID)
 	log.Print("Username: " + conf.Username)
 	if len(conf.DiscordToken) > 0 {
