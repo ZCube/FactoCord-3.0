@@ -1,7 +1,9 @@
 package support
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -74,26 +76,95 @@ func (conf *configT) MustLoad() {
 		Critical(err, "... when parsing config.json")
 	}
 
-	if len(conf.Executable) == 0 {
-		step := -1
-		args := []string{}
-		for _, arg := range os.Args {
-			if arg == "--" {
-				step = 0
-			}
-			if step == 1 {
-				conf.Executable = arg
-			} else if step > 1 {
-				args = append(args, arg)
-			}
-			if step >= 0 {
-				step++
-			}
-		}
-		if step > 1 {
-			conf.LaunchParameters = args
+	var discordToken string
+	var factorioChannelID string
+	var username string
+	var modPortalToken string
+
+	flag.StringVar(&discordToken, "discord-token", "", "Discord bot token")
+	flag.StringVar(&factorioChannelID, "factorio-channel-id", "", "Factorio channel ID")
+	flag.StringVar(&username, "username", "", "Username")
+	flag.StringVar(&modPortalToken, "mod-portal-token", "", "Mod portal access token")
+
+	var discordTokenFile string
+	var factorioChannelIDFile string
+	var usernameFile string
+	var modPortalTokenFile string
+
+	flag.StringVar(&discordTokenFile, "discord-token-file", "/discord/token", "Discord bot token file")
+	flag.StringVar(&factorioChannelIDFile, "factorio-channel-id-file", "/discord/factorio_channel_id", "Factorio channel ID file")
+	flag.StringVar(&usernameFile, "username-file", "/account/username", "Username file")
+	flag.StringVar(&modPortalTokenFile, "mod-portal-token-file", "/account/token", "Mod portal access token file")
+
+	flag.Parse()
+	args := os.Args
+	dashIndex := -1
+	for i, arg := range args {
+		if arg == "--" {
+			dashIndex = i
+			break
 		}
 	}
+
+	if len(conf.Executable) == 0 {
+		if dashIndex != -1 {
+			conf.LaunchParameters = args[dashIndex+1:]
+			// args = args[:dashIndex]
+		}
+	}
+
+	// priority
+	// 1: config.json
+	// 2: command line arguments
+	// 3: secret files
+	// 4: environment variables
+
+	if len(conf.DiscordToken) == 0 {
+		conf.DiscordToken = discordToken
+	}
+	if len(conf.FactorioChannelID) == 0 {
+		conf.FactorioChannelID = factorioChannelID
+	}
+	if len(conf.Username) == 0 {
+		conf.Username = username
+	}
+	if len(conf.ModPortalToken) == 0 {
+		conf.ModPortalToken = modPortalToken
+	}
+
+	if len(conf.DiscordToken) == 0 {
+		if data, err := os.ReadFile(discordTokenFile); err == nil {
+			str := strings.TrimSpace(string(data))
+			if len(str) > 0 {
+				conf.DiscordToken = str
+			}
+		}
+	}
+	if len(conf.FactorioChannelID) == 0 {
+		if data, err := os.ReadFile(factorioChannelIDFile); err == nil {
+			str := strings.TrimSpace(string(data))
+			if len(str) > 0 {
+				conf.FactorioChannelID = str
+			}
+		}
+	}
+	if len(conf.Username) == 0 {
+		if data, err := os.ReadFile(usernameFile); err == nil {
+			str := strings.TrimSpace(string(data))
+			if len(str) > 0 {
+				conf.Username = str
+			}
+		}
+	}
+	if len(conf.ModPortalToken) == 0 {
+		if data, err := os.ReadFile(modPortalTokenFile); err == nil {
+			str := strings.TrimSpace(string(data))
+			if len(str) > 0 {
+				conf.ModPortalToken = str
+			}
+		}
+	}
+
 	if len(conf.DiscordToken) == 0 {
 		conf.DiscordToken = os.Getenv("DISCORD_TOKEN")
 	}
@@ -107,37 +178,17 @@ func (conf *configT) MustLoad() {
 		conf.ModPortalToken = os.Getenv("TOKEN")
 	}
 
-	if len(conf.DiscordToken) == 0 {
-		if data, err := os.ReadFile("/discord/token"); err == nil {
-			str := strings.TrimSpace(string(data))
-			if len(str) > 0 {
-				conf.DiscordToken = str
-			}
-		}
+	log.Print("FactorioChannelID: " + conf.FactorioChannelID)
+	log.Print("Username: " + conf.Username)
+	if len(conf.DiscordToken) > 0 {
+		log.Print("DiscordToken: " + "**REDACTED**")
+	} else {
+		log.Print("DiscordToken: (not set)")
 	}
-	if len(conf.FactorioChannelID) == 0 {
-		if data, err := os.ReadFile("/discord/factorio_channel_id"); err == nil {
-			str := strings.TrimSpace(string(data))
-			if len(str) > 0 {
-				conf.FactorioChannelID = str
-			}
-		}
-	}
-	if len(conf.Username) == 0 {
-		if data, err := os.ReadFile("/account/username"); err == nil {
-			str := strings.TrimSpace(string(data))
-			if len(str) > 0 {
-				conf.Username = str
-			}
-		}
-	}
-	if len(conf.ModPortalToken) == 0 {
-		if data, err := os.ReadFile("/account/token"); err == nil {
-			str := strings.TrimSpace(string(data))
-			if len(str) > 0 {
-				conf.ModPortalToken = str
-			}
-		}
+	if len(conf.ModPortalToken) > 0 {
+		log.Print("ModPortalToken: " + "**REDACTED**")
+	} else {
+		log.Print("ModPortalToken: (not set)")
 	}
 }
 
