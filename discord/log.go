@@ -56,7 +56,10 @@ func ProcessFactorioLogLine(line string) {
 				support.LastMessage.Edit(Session, support.Config.Messages.ServerSave+fmt.Sprintf(" [x%d]", num))
 				support.LastMessage.Metadata = fmt.Sprintf("save%d", num)
 			} else {
-				message := support.SendMessage(Session, support.Config.Messages.ServerSave)
+				message := support.SendComplex(Session, &discordgo.MessageSend{
+					Content: support.Config.Messages.ServerSave,
+					Flags:   discordgo.MessageFlagsSuppressNotifications, // @silent
+				})
 				if message != nil {
 					message.Metadata = "save1"
 				}
